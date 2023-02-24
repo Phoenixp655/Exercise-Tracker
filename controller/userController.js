@@ -42,7 +42,7 @@ const createUserExercise = async (req, res) => {
     //@ create exercise and send user info combine currrent create exercise
     createExercise.save((err, data) => {
         if(err) console.log(err);
-        const userExercise = Object.assign({desciption: data.desciption, duration: data.duration, date: data.date}, {username: getUser.username, _id: getUser._id});
+        const userExercise = Object.assign({_id: getUser._id, username: getUser.username},{date: data.date, duration: data.duration,desciption: data.desciption});
         res.json(userExercise)
     })
 
