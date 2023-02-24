@@ -17,10 +17,7 @@ app.use(cors({optionsSuccessStatus: 200}))
 
 
 
-app.use('/api/users', require('./router/userRouter'))
-
-
-
+app.use('/api/users', require('./router/userRouter'));
 
 
 
