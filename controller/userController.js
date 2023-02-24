@@ -23,29 +23,33 @@ const getAllUser = async (req, res) => {
 }
 
 const createUserExercise = async (req, res) => {
+
     //@ assign reqest body data to bodyData
     const bodyData = req.body;
     const userId = req.params.id;
+
     const date = !bodyData 
     ? new Date(Date.now()).toDateString() 
     : /[0-9]{4}\/[0-9]{1,2}\/[0-9]{1,2}/g.test(bodyData.date) 
         ? new Date(bodyData.date).toDateString() 
         : new Date(Date.now()).toDateString();
+
     //@ create exercise schema
     const createExercise = await exerciseSchema.create({
         desciption: bodyData.desciption,
         duration: bodyData.duration,
         date: date,
-        user: userId
     })
 
     //@ get user with id
-    const getUser = await userSchema.findById(userId,'username');
+    let getUser = await userSchema.findById(userId,'username');
+    
     // @ create exercise and send user info combine currrent create exercise
     createExercise.save((err, data) => {
         if(err) console.log(err);
-        const userExercise = Object.assign({_id: userId, username: getUser.username},{date: data.date, duration: data.duration,desciption: data.desciption});
-        res.json(userExercise)
+        const {desciption: desciption, duration: duration, date: date } = data;
+        console.log(desciption, duration, date)
+        res.status(200).json({username: getUser.username, desciption: desciption, duration: duration, date: date, _id: getUser._id})
     })
     
 }
