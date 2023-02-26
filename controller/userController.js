@@ -1,9 +1,11 @@
 const express = require('express');
 const exerciseSchema = require('../model/exerciseSchema');
-const userSchema = require('../model/userSchema')
+const userSchema = require('../model/userSchema');
+const asyncHandler = require('express-async-handler')
+
 
 //@ create user
-const createUser = async (req, res) => {
+const createUser = asyncHandler(async (req, res) => {
     const user = await userSchema.create({
         username: req.body.username
     })
@@ -12,50 +14,63 @@ const createUser = async (req, res) => {
         if(err) console.log(err);
         res.status(200).json({username: data.username, _id: data._id})
     })
-}
+})
 
 
 //@ get all user
-const getAllUser = async (req, res) => {
+const getAllUser = asyncHandler(async (req, res) => {
     const getAll = await userSchema.find({});
 
     res.status(200).send(getAll)
-}
+})
 
-const createUserExercise = async (req, res) => {
+//@ create user exercise and res user with exercise recent added 
+const createUserExercise = asyncHandler(async (req, res) => {
+    const reqBody = req.body;
+    const reqParams = req.params.id;
 
-    //@ assign reqest body data to bodyData
-    const bodyData = req.body;
-    const userId = req.params.id;
-
-    const date = !bodyData 
+    //@ if date field empty use system date or check regex date string if valid then create date frome it
+    const date = !reqBody.date 
     ? new Date(Date.now()).toDateString() 
-    : /[0-9]{4}\/[0-9]{1,2}\/[0-9]{1,2}/g.test(bodyData.date) 
-        ? new Date(bodyData.date).toDateString() 
-        : new Date(Date.now()).toDateString();
+    : /[0-9]{4}(\/|\-)[0-9]{1,2}(\/|\-)[0-9]{1,2}/g.test(reqBody.date) 
+        ? new Date(reqBody.date).toDateString() 
+        : res.json({error: 'Invalid date format'});
 
-    //@ create exercise schema
-    const createExercise = await exerciseSchema.create({
-        desciption: bodyData.desciption,
-        duration: bodyData.duration,
+    const creaExercise = await exerciseSchema.create({
+        description: reqBody.description,
+        duration: reqBody.duration,
         date: date,
-    })
+        users: reqParams
+    });
 
-    //@ get user with id
-    let getUser = await userSchema.findById(userId,'username');
-    
-    // @ create exercise and send user info combine currrent create exercise
-    createExercise.save((err, data) => {
+
+    let getUser = await userSchema.findById(reqParams,'username');
+
+    creaExercise.save((err, data) => {
         if(err) console.log(err);
-        const {desciption: desciption, duration: duration, date: date } = data;
-        console.log(desciption, duration, date)
-        res.status(200).json({username: getUser.username, desciption: desciption, duration: duration, date: date, _id: getUser._id})
+
+            res.status(200).json({
+                username: getUser.username, 
+                description: data.description,
+                duration: data.duration,
+                date: data.date,
+                _id: getUser._id
+            })
     })
-    
-}
+})
+
+const getAllUserExercises = asyncHandler(async (req, res) => {
+    const reqParams =  req.params.id;
+    let getUser = await userSchema.findById(reqParams,'username')
+    let getExercises = await exerciseSchema.find({}, 'description duration date -_id').where('users').equals(reqParams).exec((err, data) => {
+        if(err) console.log(data);
+        res.status(200).json({_id : reqParams, username : getUser.username, count : data.length, data})
+    })
+})
 
 module.exports = {
     createUser,
     getAllUser,
-    createUserExercise
+    createUserExercise,
+    getAllUserExercises
 }

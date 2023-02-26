@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const {createUser, getAllUser, createUserExercise} = require('../controller/userController') 
+const {createUser, getAllUser, createUserExercise, getAllUserExercises} = require('../controller/userController') 
 
 
 router.route('/')
@@ -11,6 +11,10 @@ router.route('/')
 
 router.post('/:id/exercises', (req, res) => {
     createUserExercise(req, res)
+})
+
+router.get('/:id/logs', (req, res) => {
+    getAllUserExercises(req, res)
 })
 
 module.exports = router;
