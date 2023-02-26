@@ -3,7 +3,8 @@ const exerciseSchema = require('../model/exerciseSchema');
 const userSchema = require('../model/userSchema');
 const asyncHandler = require('express-async-handler')
 
-
+//@ userRouter
+//@ POST method
 //@ create user
 const createUser = asyncHandler(async (req, res) => {
     const user = await userSchema.create({
@@ -16,7 +17,8 @@ const createUser = asyncHandler(async (req, res) => {
     })
 })
 
-
+//@ userRouter
+//@ GET method
 //@ get all user
 const getAllUser = asyncHandler(async (req, res) => {
     const getAll = await userSchema.find({});
@@ -24,12 +26,14 @@ const getAllUser = asyncHandler(async (req, res) => {
     res.status(200).send(getAll)
 })
 
+//@ userRouter
+//@ POST method
 //@ create user exercise and res user with exercise recent added 
 const createUserExercise = asyncHandler(async (req, res) => {
     const reqBody = req.body;
     const reqParams = req.params.id;
 
-    //@ if date field empty use system date or check regex date string if valid then create date frome it
+    //@ if date field empty use system date or check regex date string if valid then create date from it
     const date = !reqBody.date 
     ? new Date(Date.now()).toDateString() 
     : /[0-9]{4}(\/|\-)[0-9]{1,2}(\/|\-)[0-9]{1,2}/g.test(reqBody.date) 
@@ -59,12 +63,16 @@ const createUserExercise = asyncHandler(async (req, res) => {
     })
 })
 
+//@ userRouter
+//@ GET method
 const getAllUserExercises = asyncHandler(async (req, res) => {
     const reqParams =  req.params.id;
-    let getUser = await userSchema.findById(reqParams,'username')
-    let getExercises = await exerciseSchema.find({}, 'description duration date -_id').where('users').equals(reqParams).exec((err, data) => {
+    let getUser = await userSchema.findById(reqParams,'username');
+
+    //@ query find exercise with exact id of user and res user with their exercise logs  
+    await exerciseSchema.find({}, 'description duration date -_id').where('users').equals(reqParams).exec((err, data) => {
         if(err) console.log(data);
-        res.status(200).json({_id : reqParams, username : getUser.username, count : data.length, data})
+        res.status(200).json({_id : reqParams, username : getUser.username, count : data.length, log: data})
     })
 })
 
