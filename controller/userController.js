@@ -35,9 +35,9 @@ const createUserExercise = asyncHandler(async (req, res) => {
 
     //@ if date field empty use system date or check regex date string if valid then create date from it
     const date = !reqBody.date 
-    ? new Date(Date.now()).toDateString() 
+    ? new Date(Date.now()).toLocaleDateString().split('/').reverse().join('-') 
     : /[0-9]{4}(\/|\-)[0-9]{1,2}(\/|\-)[0-9]{1,2}/g.test(reqBody.date) 
-        ? new Date(reqBody.date).toDateString() 
+        ? reqBody.date
         : res.json({error: 'Invalid date format'});
 
     const creaExercise = await exerciseSchema.create({
@@ -52,12 +52,11 @@ const createUserExercise = asyncHandler(async (req, res) => {
 
     creaExercise.save((err, data) => {
         if(err) console.log(err);
-
             res.status(200).json({
                 username: getUser.username, 
                 description: data.description,
                 duration: data.duration,
-                date: data.date,
+                date: new Date(data.date).toDateString(),
                 _id: getUser._id
             })
     })
@@ -67,13 +66,19 @@ const createUserExercise = asyncHandler(async (req, res) => {
 //@ GET method
 const getAllUserExercises = asyncHandler(async (req, res) => {
     const reqParams =  req.params.id;
+    const reqQuery = req.query;
+
+    const query = Object.keys(reqQuery).length === 0 && reqQuery.constructor === Object 
+            ? {} 
+            : {date : { $gte: reqQuery.from , $lte: reqQuery.to }}
+
     let getUser = await userSchema.findById(reqParams,'username');
 
-    //@ query find exercise with exact id of user and res user with their exercise logs  
-    await exerciseSchema.find({}, 'description duration date -_id').where('users').equals(reqParams).exec((err, data) => {
-        if(err) console.log(data);
+    await exerciseSchema.find(query, 'description duration date -_id').where('users').equals(reqParams).limit(reqQuery.limit).exec((err, data) => {
+        if(err) console.log(err);
         res.status(200).json({_id : reqParams, username : getUser.username, count : data.length, log: data})
     })
+
 })
 
 module.exports = {
