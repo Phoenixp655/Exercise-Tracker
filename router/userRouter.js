@@ -11,7 +11,7 @@ router.route('/')
 
 router.post('/:id/exercises', (req, res) => {
     //@ validate date format or if it is empty date
-    /[0-9]{4,}(\/|\-)(0[1-9]|1[012])(\/|\-)(0[1-9]|1[0-9]|2[0-9]|3[01])/g.test(req.body.date) || (Object.keys(req.body.date).length === 0)
+    /[0-9]{4,}(\/|\-)(0[1-9]|1[012])(\/|\-)(0[1-9]|1[0-9]|2[0-9]|3[01])/g.test(req.body.date) || !req.body.date
     ? createUserExercise(req, res) 
     : res.json({error: "Invalid date format"})
 })
