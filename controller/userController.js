@@ -33,12 +33,11 @@ const createUserExercise = asyncHandler(async (req, res) => {
     const reqBody = req.body;
     const reqParams = req.params.id;
 
-    //@ if date field empty use system date or check regex date string if valid then create date from it
-    const date = !reqBody.date 
-    ? new Date(Date.now()).toLocaleDateString().split('/').reverse().join('-') 
-    : /[0-9]{4}(\/|\-)[0-9]{1,2}(\/|\-)[0-9]{1,2}/g.test(reqBody.date) 
-        ? reqBody.date
-        : res.json({error: 'Invalid date format'});
+    //@ if date field empty use system date 
+    let date;
+    Object.keys(reqBody.date).length === 0 
+    ? date = new Date().toLocaleDateString('en-GB', { timeZone: 'UTC' }).split('/').reverse().join('-') 
+    : date = reqBody.date;
 
     const creaExercise = await exerciseSchema.create({
         description: reqBody.description,
@@ -52,6 +51,7 @@ const createUserExercise = asyncHandler(async (req, res) => {
 
     creaExercise.save((err, data) => {
         if(err) console.log(err);
+
             res.status(200).json({
                 username: getUser.username, 
                 description: data.description,
